@@ -1258,3 +1258,30 @@ The product should optimise for one central customer promise:
 
 This gives you a fairly complete **product-level PRD** without getting into engineering architecture or technical implementation. If you want to turn this into the next stage, the natural follow-up is a **screen-by-screen TaxiAG app specification** covering the homepage, search, comparison results, booking, tracking, account, provider profile, family/business areas, and checkout.
 
+---
+
+# **Appendix A — Locked Implementation Decisions (26 September 2026)**
+
+Recorded here so the PRD remains the single canonical product record. Nothing above is changed by this appendix. Full rationale lives in `IMPLEMENTATION_PLAN.md §0`.
+
+## **Stack (all £0 pre-scale, local-first)**
+
+* Clients: React Native (Expo) + Next.js web, TypeScript everywhere
+* API: NestJS modular monolith; PostgreSQL + PostGIS + Redis via local Docker Compose
+* Auth: Better Auth, self-hosted (Apple/Google social + email/phone OTP)
+* Storage: Cloudflare R2 (S3-compatible)
+* Payments: PayPal Checkout + sandbox (split-payout options reassessed at scale)
+* Maps: OpenStreetMap stack — Leaflet + Nominatim/Photon + OSRM (Google Maps deferred to scale)
+* Notifications: **Twilio** (SMS) + **Postmark** (email) + Expo Push/FCM (push) — trial credits in dev, pay-as-you-go in production
+* Hosting: local dev machine; cloud + Terraform deferred to scale
+
+## **Design theme**
+
+Dark, warm, eye-friendly theme: espresso background `#1C1611`, cream text `#F3EAD9`, softened price/verified/safety semantics. Tokens: `packages/tokens/tokens.json`. Visual preview: `design.html`.
+
+## **Phase 0 build status**
+
+* 0.1 Monorepo scaffold + local Docker stack + CI + tokens v1 — done
+* 0.2 NestJS skeleton (`/health`, Postgres/Redis, Better Auth base) — done, boot-verified
+* 0.3 `ProviderAdapter` interface + mock provider + live `POST /v1/search` + `@taxiag/ui` formatting — done, boot-verified
+

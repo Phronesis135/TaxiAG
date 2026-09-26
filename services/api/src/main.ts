@@ -15,6 +15,8 @@ async function bootstrap() {
   // JSON parsing is re-added below for our own routes (registered during listen,
   // i.e. after these mounts, so it runs before Nest route handlers).
   const app = await NestFactory.create(AppModule, { bodyParser: false });
+  // Local web MVP (http://localhost:3000) calls the API from the browser.
+  app.enableCors({ origin: ['http://localhost:3000'] });
   const server = app.getHttpAdapter().getInstance();
   server.use('/api/auth', toNodeHandler(auth));
   server.use(json());
