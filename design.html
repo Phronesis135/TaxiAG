@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaxiAG — Design System v1 Preview</title>
+<style>
+  :root {
+    --neutral-0: #FFFFFF;
+    --neutral-50: #F7F7F8;
+    --neutral-100: #EFEFF1;
+    --neutral-900: #17181C;
+    --price-fixed: #1B7F3B;
+    --price-estimated: #B26A00;
+    --price-metered: #4A5A6A;
+    --verified: #1B7F3B;
+    --sponsored-container: #F1EFE9;
+    --sponsored-label: #6B6257;
+    --safety: #C81E1E;
+    --radius-card: 12px;
+    --radius-large: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    font-size: 16px; line-height: 1.5; color: var(--neutral-900);
+    background: var(--neutral-50); padding: 32px 16px;
+  }
+  .page { max-width: 960px; margin: 0 auto; }
+  header.hero { margin-bottom: 32px; }
+  header.hero h1 { font-size: 32px; letter-spacing: -0.5px; }
+  header.hero p { color: var(--price-metered); margin-top: 4px; }
+  section {
+    background: var(--neutral-0); border-radius: var(--radius-large);
+    padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(23,24,28,.08);
+  }
+  section h2 { font-size: 22px; margin-bottom: 4px; }
+  section .sub { font-size: 14px; color: var(--price-metered); margin-bottom: 16px; }
+  /* Colors */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .swatch { border: 1px solid var(--neutral-100); border-radius: var(--radius-card); overflow: hidden; }
+  .swatch .chip { height: 64px; }
+  .swatch .meta { padding: 8px 12px; font-size: 14px; }
+  .swatch .meta code { display: block; color: var(--price-metered); font-size: 13px; }
+  /* Typography */
+  .type-row { padding: 12px 0; border-bottom: 1px solid var(--neutral-100); }
+  .type-row:last-child { border-bottom: none; }
+  .t-hero { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+  .t-price { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .t-body { font-size: 16px; }
+  .t-small { font-size: 14px; color: var(--price-metered); }
+  .t-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--price-metered); }
+  /* Buttons */
+  .btn-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .btn {
+    min-height: 48px; padding: 0 24px; border-radius: var(--radius-card);
+    font-size: 16px; font-weight: 600; cursor: pointer; border: 2px solid transparent;
+    font-family: inherit;
+  }
+  .btn:focus-visible, input:focus-visible {
+    outline: 3px solid var(--price-estimated); outline-offset: 2px;
+  }
+  .btn-primary { background: var(--neutral-900); color: var(--neutral-0); }
+  .btn-primary:hover { background: #000; }
+  .btn-secondary { background: var(--neutral-0); color: var(--neutral-900); border-color: var(--neutral-900); }
+  .btn-secondary:hover { background: var(--neutral-100); }
+  .btn-safety { background: var(--safety); color: var(--neutral-0); }
+  .btn-safety:hover { filter: brightness(.9); }
+  .btn[disabled] { opacity: .45; cursor: not-allowed; }
+  /* Inputs */
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; min-height: 48px; padding: 0 16px; font-size: 16px; font-family: inherit;
+    border: 2px solid var(--neutral-100); border-radius: var(--radius-card);
+    background: var(--neutral-0); color: var(--neutral-900);
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--neutral-900); outline: 3px solid var(--price-estimated); outline-offset: 1px;
+  }
+  .field .hint { font-size: 14px; color: var(--price-metered); margin-top: 4px; }
+  .field .error-msg { font-size: 14px; color: var(--safety); margin-top: 4px; font-weight: 600; }
+  .field input[aria-invalid="true"] { border-color: var(--safety); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+  /* Price badges */
+  .badge {
+    display: inline-block; padding: 6px 12px; border-radius: 999px;
+    font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .badge-fixed { background: #E5F3E9; color: var(--price-fixed); }
+  .badge-estimated { background: #FBF0DC; color: var(--price-estimated); }
+  .badge-metered { background: #E9EDF1; color: var(--price-metered); }
+  /* Result cards */
+  .result {
+    border: 1px solid var(--neutral-100); border-radius: var(--radius-card);
+    padding: 16px; margin-bottom: 12px; display: flex; gap: 16px; align-items: center;
+    background: var(--neutral-0);
+  }
+  .result .logo {
+    width: 48px; height: 48px; border-radius: var(--radius-card); flex-shrink: 0;
+    background: var(--neutral-900); color: var(--neutral-0);
+    display: flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+  .result .main { flex: 1; }
+  .result .provider { font-weight: 700; }
+  .result .detail { font-size: 14px; color: var(--price-metered); }
+  .result .price { text-align: right; }
+  .result .amount { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .verified { color: var(--verified); font-size: 14px; font-weight: 600; }
+  .sponsored {
+    background: var(--sponsored-container); border: 1px dashed var(--sponsored-label);
+  }
+  .sponsored-tag {
+    display: inline-block; font-size: 13px; font-weight: 700; color: var(--sponsored-label);
+    text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px;
+  }
+  footer { text-align: center; font-size: 14px; color: var(--price-metered); padding: 16px; }
+  footer code { font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <h1>TaxiAG Design System v1</h1>
+    <p>Compare. Choose. Book. — visual preview generated from <code>packages/tokens/tokens.json</code></p>
+  </header>
+
+  <section aria-labelledby="colors">
+    <h2 id="colors">1 · Colors</h2>
+    <p class="sub">Semantic tokens. Price colors are reserved for price badges only — sponsored slots never use them.</p>
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:#1B7F3B"></div><div class="meta">price-fixed<code>#1B7F3B</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#B26A00"></div><div class="meta">price-estimated<code>#B26A00</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#4A5A6A"></div><div class="meta">price-metered<code>#4A5A6A</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#1B7F3B"></div><div class="meta">verified<code>#1B7F3B</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#F1EFE9"></div><div class="meta">sponsored-container<code>#F1EFE9</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#6B6257"></div><div class="meta">sponsored-label<code>#6B6257</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#C81E1E"></div><div class="meta">safety (emergency only)<code>#C81E1E</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#17181C"></div><div class="meta">neutral-900<code>#17181C</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#EFEFF1"></div><div class="meta">neutral-100<code>#EFEFF1</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#F7F7F8"></div><div class="meta">neutral-50<code>#F7F7F8</code></div></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="type">
+    <h2 id="type">2 · Typography</h2>
+    <p class="sub">System stack (SF Pro / Roboto, Inter on web). Minimum 16px body. Tabular numerals for all prices.</p>
+    <div class="type-row"><div class="t-label">Hero · 32px bold</div><div class="t-hero">Compare every realistic option</div></div>
+    <div class="type-row"><div class="t-label">Price · 22px bold tabular</div><div class="t-price">Price locked — £18.50</div></div>
+    <div class="type-row"><div class="t-label">Body · 16px</div><div class="t-body">Your driver is 7 minutes away. Pickup: Cambridge Station, front entrance.</div></div>
+    <div class="type-row"><div class="t-label">Small · 14px muted</div><div class="t-small">Quote valid for 5 minutes · Free cancellation up to 10 min before pickup</div></div>
+  </section>
+
+  <section aria-labelledby="buttons">
+    <h2 id="buttons">3 · Buttons</h2>
+    <p class="sub">Minimum 48px touch target. Visible amber focus ring (keyboard users). Red is reserved for safety actions.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" type="button">Compare taxis</button>
+      <button class="btn btn-secondary" type="button">Add return</button>
+      <button class="btn btn-safety" type="button">Emergency help</button>
+      <button class="btn btn-primary" type="button" disabled>Searching…</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="inputs">
+    <h2 id="inputs">4 · Inputs</h2>
+    <p class="sub">Every input has a real label (screen readers). Errors are plain language, linked to the field.</p>
+    <div class="field">
+      <label for="from">From</label>
+      <input id="from" type="text" value="Cambridge Station" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="to">To</label>
+      <input id="to" type="text" value="London Heathrow T5" aria-invalid="true" aria-describedby="to-error">
+      <p class="error-msg" id="to-error">Please choose a terminal — “Heathrow” alone isn’t precise enough for pickup.</p>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="when">When?</label>
+        <input id="when" type="datetime-local" value="2026-10-01T10:00">
+      </div>
+      <div class="field">
+        <label for="pax">Passengers</label>
+        <select id="pax"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5+</option></select>
+        <p class="hint">Child seats and extra luggage are set on the next step.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="badges">
+    <h2 id="badges">5 · Price badges</h2>
+    <p class="sub">PRD §7 — every result carries exactly one. Rendered by <code>priceDisplayText()</code> in <code>@taxiag/ui</code>.</p>
+    <div class="btn-row">
+      <span class="badge badge-fixed">Price locked — £18.50</span>
+      <span class="badge badge-estimated">Estimated — £16.00–£21.00</span>
+      <span class="badge badge-metered">From £15.00</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="results">
+    <h2 id="results">6 · Sample results</h2>
+    <p class="sub">Cheapest first. Sponsored placement is labelled, separated, and never styled as a price winner.</p>
+    <div class="result">
+      <div class="logo" aria-hidden="true">LT</div>
+      <div class="main">
+        <div class="provider">Local Taxi Co <span class="verified">✓ Verified</span></div>
+        <div class="detail">Pickup: 7 min · 4.8★ (1,240 journeys) · 92% on-time</div>
+      </div>
+      <div class="price">
+        <div class="amount">£16.00</div>
+        <span class="badge badge-fixed">Fixed price</span>
+      </div>
+    </div>
+    <div class="result">
+      <div class="logo" aria-hidden="true">UH</div>
+      <div class="main">
+        <div class="provider">Uptown Hire <span class="verified">✓ Verified</span></div>
+        <div class="detail">Pickup: 4 min · 4.6★ (860 journeys) · Live tracking</div>
+      </div>
+      <div class="price">
+        <div class="amount">£16–£21</div>
+        <span class="badge badge-estimated">Estimated</span>
+      </div>
+    </div>
+    <div class="result sponsored">
+      <div class="main">
+        <span class="sponsored-tag">Sponsored</span>
+        <div class="provider">ExecRide Premium</div>
+        <div class="detail">Executive · Pickup: 6 min · 4.9★ · Paid placement, ranked separately</div>
+      </div>
+      <div class="price"><div class="amount">£32.00</div></div>
+    </div>
+  </section>
+
+  <footer>
+    TaxiAG design tokens v1 · source: <code>packages/tokens/tokens.json</code> · open <code>design.html</code> in any browser, no build step
+  </footer>
+
+</div>
+</body>
+</html>
