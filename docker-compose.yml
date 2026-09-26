@@ -1,0 +1,53 @@
+# TaxiAG local stack. £0: everything runs on this machine.
+# Start:  npm run stack:up   (requires Docker Desktop running)
+# Stop:   npm run stack:down
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: taxiag
+      POSTGRES_USER: taxiag
+      POSTGRES_PASSWORD: taxiag
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taxiag"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  # Local mail catcher (dev inbox UI at http://localhost:8025).
+  # Postmark test server is used for API-level email tests; Mailpit catches SMTP locally.
+  mailpit:
+    image: axllent/mailpit:v1
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  # OSRM routing (Great Britain extract). Enable with:
+  #   docker compose --profile routing up -d
+  # First-time data prep (download + extract once into ./docker/osrm):
+  #   See services/api docs in Phase 0.2. Until then, routing falls back to
+  #   straight-line estimates in dev.
+  osrm:
+    image: osrm/osrm-backend:v5.27.1
+    profiles: ["routing"]
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./docker/osrm:/data
+    command: osrm-routed --algorithm mld /data/great-britain-latest.osrm
+
+volumes:
+  pgdata:

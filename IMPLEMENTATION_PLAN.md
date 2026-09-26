@@ -21,12 +21,12 @@ analytics) and risks.
 | 5 | Payments | **PayPal** (Checkout + sandbox, free for dev) | No monthly fees; sandbox covers direct vs provider-charged flows (PRD §16/§30) now; Apple Pay/Google Pay via PayPal where available; reassess split-payout options at scale |
 | 6 | Maps & places | **OpenStreetMap stack, free** — Leaflet (maps) + Nominatim/Photon (geocode/autocomplete) + OSRM (routing, local Docker) | £0 with strong UK coverage; Google Maps Platform becomes the paid upgrade at scale (better autocomplete/SLAs) |
 | 7 | Auth | **Better Auth** (open-source, self-hosted, free) | Apple/Google social + email OTP + phone OTP plugins cover PRD §15 with no per-user fees; runs inside our API, data stays local |
-| 8 | Notifications | **Expo Push + FCM** (free) for push; **Resend free tier / local Mailpit** for email; SMS deferred (dev fallback: in-app inbox + log) | £0 path for all PRD §19 dev flows; Twilio SMS + paid email volume arrive at scale |
+| 8 | Notifications | **Twilio** (SMS) + **Postmark** (email) + **Expo Push/FCM** (push) | Decided providers: trial/free credits cover dev, pay-as-you-go at scale; Twilio gives UK sender ID + delivery receipts, Postmark keeps receipts out of spam (PRD §19) |
 | 9 | Hosting | **Local dev machine** (Docker Compose: API + Postgres + Redis + OSRM + Mailpit) + **GitHub Actions** CI (free tier) | £0; staging = second Compose profile on the same/another local machine; cloud (AWS/GCP) + Terraform deferred to scale |
 | 10 | Architecture shape | **Modular monolith → extract services** at Phase 2 | MVP speed without painting into a corner; extraction triggers defined in §6 |
 | 11 | Object storage | **Cloudflare R2** (generous free tier, zero egress fees) | Verification docs, vehicle/driver photos, receipts; S3-compatible so code stays portable |
 
-> **Cost constraint (pre-scale):** £0 paid services — everything below runs on the local machine (Docker Compose) or on free tiers/sandbox. Paid upgrades (cloud hosting, Google Maps, Twilio SMS, Stripe/Connect review) are deferred to Phase 2/3 scale.
+> **Cost constraint (pre-scale):** £0 paid services — everything below runs on the local machine (Docker Compose) or on free tiers/sandbox/trial credits. Paid upgrades (cloud hosting, Google Maps, Stripe/Connect review) are deferred to Phase 2/3 scale; Twilio/Postmark run on trial credits in dev, pay-as-you-go in production.
 >
 > If any decision changes, only §§1–6 need re-review; phase scopes (§§7–9) are stack-agnostic.
 
@@ -89,10 +89,10 @@ Figma library + coded component library (React Native Paper/Tamagui-based + shar
    └────────────┬─────────────────────────────┘
       ┌─────────┼──────────┐
   PostgreSQL   Redis    PayPal sandbox / OSM /
-  + PostGIS   (quotes,  FCM + Expo Push /
-   (system    realtime) Better Auth / R2
-   of record,  (all local or free tier)
-   local Docker)
+  + PostGIS   (quotes,  Twilio + Postmark /
+   (system    realtime) Expo Push + Better
+   of record,  Auth / R2 (trial +
+   local Docker) free tiers for dev)
       │
   Provider Adapter Layer ──► Ride-hailing APIs
                              Aggregators (e.g. Autocab/iCabbi-type dispatch systems)
@@ -161,6 +161,7 @@ Each integration implements the `ProviderAdapter` interface (`getQuote`, `create
 - [ ] Monorepo setup (`apps/mobile`, `apps/web`, `services/api`, `packages/tokens`, `packages/ui`), CI (lint/type/test/build), Docker Compose local stack (API, Postgres+PostGIS, Redis, OSRM, Mailpit).
 - [ ] Design tokens + first 6 components (§1.3 items 1–3, 5, 8 + EmptyState); accessibility CI gates.
 - [ ] Better Auth (guest sessions + Apple/Google/email/phone OTP), PostgreSQL+PostGIS schema v1, Redis, PayPal sandbox, OSM stack (Leaflet + Nominatim/Photon + OSRM) wired.
+- [ ] Twilio trial account + Postmark test server wired (dev credits; pay-as-you-go at scale).
 - [ ] `ProviderAdapter` interface + **2–3 pilot provider integrations** (at least 1 Tier A) in 1–2 UK pilot cities.
 - [ ] Analytics event taxonomy covering PRD §41 metrics; error/observability stack (Sentry free tier, logs, dashboards).
 - **Exit:** searchable pilot journeys returning real multi-provider quotes in staging; design system v1 published.

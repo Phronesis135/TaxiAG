@@ -1,0 +1,8 @@
+{
+  "name": "@taxiag/tokens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TaxiAG design tokens — single source of truth (see IMPLEMENTATION_PLAN.md §1)",
+  "main": "tokens.json",
+  "files": ["tokens.json"]
+}
