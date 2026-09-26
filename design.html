@@ -3,53 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TaxiAG — Design System v1 Preview</title>
+<title>TaxiAG — Design System v1 Preview (Dark Warm)</title>
 <style>
   :root {
-    --neutral-0: #FFFFFF;
-    --neutral-50: #F7F7F8;
-    --neutral-100: #EFEFF1;
-    --neutral-900: #17181C;
-    --price-fixed: #1B7F3B;
-    --price-estimated: #B26A00;
-    --price-metered: #4A5A6A;
-    --verified: #1B7F3B;
-    --sponsored-container: #F1EFE9;
-    --sponsored-label: #6B6257;
-    --safety: #C81E1E;
+    --background: #1C1611;
+    --surface: #2A211A;
+    --surface-input: #241C15;
+    --border: #3B2F25;
+    --text: #F3EAD9;
+    --muted: #C4B49C;
+    --price-fixed: #8FD6A4;
+    --price-estimated: #F0B45C;
+    --price-metered: #B8AB99;
+    --price-metered-bright: #CBBFAE;
+    --verified: #8FD6A4;
+    --sponsored-container: #3A3226;
+    --sponsored-label: #D6C096;
+    --safety: #E8837A;
+    --primary-bg: #F3EAD9;
+    --primary-text: #1C1611;
+    --focus: #F0B45C;
     --radius-card: 12px;
     --radius-large: 16px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
-    font-size: 16px; line-height: 1.5; color: var(--neutral-900);
-    background: var(--neutral-50); padding: 32px 16px;
+    font-size: 16px; line-height: 1.5; color: var(--text);
+    background: var(--background); padding: 32px 16px;
   }
   .page { max-width: 960px; margin: 0 auto; }
   header.hero { margin-bottom: 32px; }
   header.hero h1 { font-size: 32px; letter-spacing: -0.5px; }
-  header.hero p { color: var(--price-metered); margin-top: 4px; }
+  header.hero p { color: var(--muted); margin-top: 4px; }
+  header.hero code, footer code { font-size: 13px; color: var(--muted); }
   section {
-    background: var(--neutral-0); border-radius: var(--radius-large);
-    padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(23,24,28,.08);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+    padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,.35);
   }
   section h2 { font-size: 22px; margin-bottom: 4px; }
-  section .sub { font-size: 14px; color: var(--price-metered); margin-bottom: 16px; }
+  section .sub { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
   /* Colors */
   .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-  .swatch { border: 1px solid var(--neutral-100); border-radius: var(--radius-card); overflow: hidden; }
+  .swatch { border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; background: var(--surface-input); }
   .swatch .chip { height: 64px; }
   .swatch .meta { padding: 8px 12px; font-size: 14px; }
-  .swatch .meta code { display: block; color: var(--price-metered); font-size: 13px; }
+  .swatch .meta code { display: block; color: var(--muted); font-size: 13px; }
   /* Typography */
-  .type-row { padding: 12px 0; border-bottom: 1px solid var(--neutral-100); }
+  .type-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
   .type-row:last-child { border-bottom: none; }
   .t-hero { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
   .t-price { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .t-body { font-size: 16px; }
-  .t-small { font-size: 14px; color: var(--price-metered); }
-  .t-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--price-metered); }
+  .t-small { font-size: 14px; color: var(--muted); }
+  .t-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
   /* Buttons */
   .btn-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
   .btn {
@@ -57,28 +65,29 @@
     font-size: 16px; font-weight: 600; cursor: pointer; border: 2px solid transparent;
     font-family: inherit;
   }
-  .btn:focus-visible, input:focus-visible {
-    outline: 3px solid var(--price-estimated); outline-offset: 2px;
+  .btn:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 3px solid var(--focus); outline-offset: 2px;
   }
-  .btn-primary { background: var(--neutral-900); color: var(--neutral-0); }
-  .btn-primary:hover { background: #000; }
-  .btn-secondary { background: var(--neutral-0); color: var(--neutral-900); border-color: var(--neutral-900); }
-  .btn-secondary:hover { background: var(--neutral-100); }
-  .btn-safety { background: var(--safety); color: var(--neutral-0); }
-  .btn-safety:hover { filter: brightness(.9); }
+  .btn-primary { background: var(--primary-bg); color: var(--primary-text); }
+  .btn-primary:hover { background: #FFF8EC; }
+  .btn-secondary { background: transparent; color: var(--text); border-color: var(--text); }
+  .btn-secondary:hover { background: rgba(243,234,217,.08); }
+  .btn-safety { background: var(--safety); color: var(--primary-text); }
+  .btn-safety:hover { filter: brightness(1.08); }
   .btn[disabled] { opacity: .45; cursor: not-allowed; }
   /* Inputs */
   .field { margin-bottom: 16px; }
   .field label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
   .field input, .field select {
     width: 100%; min-height: 48px; padding: 0 16px; font-size: 16px; font-family: inherit;
-    border: 2px solid var(--neutral-100); border-radius: var(--radius-card);
-    background: var(--neutral-0); color: var(--neutral-900);
+    border: 2px solid var(--border); border-radius: var(--radius-card);
+    background: var(--surface-input); color: var(--text);
+    color-scheme: dark;
   }
   .field input:focus, .field select:focus {
-    border-color: var(--neutral-900); outline: 3px solid var(--price-estimated); outline-offset: 1px;
+    border-color: var(--text); outline: 3px solid var(--focus); outline-offset: 1px;
   }
-  .field .hint { font-size: 14px; color: var(--price-metered); margin-top: 4px; }
+  .field .hint { font-size: 14px; color: var(--muted); margin-top: 4px; }
   .field .error-msg { font-size: 14px; color: var(--safety); margin-top: 4px; font-weight: 600; }
   .field input[aria-invalid="true"] { border-color: var(--safety); }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -88,23 +97,23 @@
     display: inline-block; padding: 6px 12px; border-radius: 999px;
     font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;
   }
-  .badge-fixed { background: #E5F3E9; color: var(--price-fixed); }
-  .badge-estimated { background: #FBF0DC; color: var(--price-estimated); }
-  .badge-metered { background: #E9EDF1; color: var(--price-metered); }
+  .badge-fixed { background: rgba(143,214,164,.15); color: var(--price-fixed); }
+  .badge-estimated { background: rgba(240,180,92,.16); color: var(--price-estimated); }
+  .badge-metered { background: rgba(184,171,153,.16); color: var(--price-metered-bright); }
   /* Result cards */
   .result {
-    border: 1px solid var(--neutral-100); border-radius: var(--radius-card);
+    border: 1px solid var(--border); border-radius: var(--radius-card);
     padding: 16px; margin-bottom: 12px; display: flex; gap: 16px; align-items: center;
-    background: var(--neutral-0);
+    background: var(--surface-input);
   }
   .result .logo {
     width: 48px; height: 48px; border-radius: var(--radius-card); flex-shrink: 0;
-    background: var(--neutral-900); color: var(--neutral-0);
+    background: var(--primary-bg); color: var(--primary-text);
     display: flex; align-items: center; justify-content: center; font-weight: 700;
   }
   .result .main { flex: 1; }
   .result .provider { font-weight: 700; }
-  .result .detail { font-size: 14px; color: var(--price-metered); }
+  .result .detail { font-size: 14px; color: var(--muted); }
   .result .price { text-align: right; }
   .result .amount { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .verified { color: var(--verified); font-size: 14px; font-weight: 600; }
@@ -115,8 +124,7 @@
     display: inline-block; font-size: 13px; font-weight: 700; color: var(--sponsored-label);
     text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px;
   }
-  footer { text-align: center; font-size: 14px; color: var(--price-metered); padding: 16px; }
-  footer code { font-size: 13px; }
+  footer { text-align: center; font-size: 14px; color: var(--muted); padding: 16px; }
 </style>
 </head>
 <body>
@@ -124,23 +132,25 @@
 
   <header class="hero">
     <h1>TaxiAG Design System v1</h1>
-    <p>Compare. Choose. Book. — visual preview generated from <code>packages/tokens/tokens.json</code></p>
+    <p>Dark warm theme · eye-friendly · generated from <code>packages/tokens/tokens.json</code></p>
   </header>
 
   <section aria-labelledby="colors">
     <h2 id="colors">1 · Colors</h2>
-    <p class="sub">Semantic tokens. Price colors are reserved for price badges only — sponsored slots never use them.</p>
+    <p class="sub">Warm dark surfaces, cream text, softened semantics. Price colors are reserved for price badges only — sponsored slots never use them.</p>
     <div class="swatches">
-      <div class="swatch"><div class="chip" style="background:#1B7F3B"></div><div class="meta">price-fixed<code>#1B7F3B</code></div></div>
-      <div class="swatch"><div class="chip" style="background:#B26A00"></div><div class="meta">price-estimated<code>#B26A00</code></div></div>
-      <div class="swatch"><div class="chip" style="background:#4A5A6A"></div><div class="meta">price-metered<code>#4A5A6A</code></div></div>
-      <div class="swatch"><div class="chip" style="background:#1B7F3B"></div><div class="meta">verified<code>#1B7F3B</code></div></div>
-      <div class="swatch"><div class="chip" style="background:#F1EFE9"></div><div class="meta">sponsored-container<code>#F1EFE9</code></div></div>
-      <div class="swatch"><div class="chip" style="background:#6B6257"></div><div class="meta">sponsored-label<code>#6B6257</code></div></div>
-      <div class="swatch"><div class="chip" style="background:#C81E1E"></div><div class="meta">safety (emergency only)<code>#C81E1E</code></div></div>
-      <div class="swatch"><div class="chip" style="background:#17181C"></div><div class="meta">neutral-900<code>#17181C</code></div></div>
-      <div class="swatch"><div class="chip" style="background:#EFEFF1"></div><div class="meta">neutral-100<code>#EFEFF1</code></div></div>
-      <div class="swatch"><div class="chip" style="background:#F7F7F8"></div><div class="meta">neutral-50<code>#F7F7F8</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#1C1611"></div><div class="meta">background<code>#1C1611</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#2A211A"></div><div class="meta">surface<code>#2A211A</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#F3EAD9"></div><div class="meta">text (warm cream)<code>#F3EAD9</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#C4B49C"></div><div class="meta">muted (warm taupe)<code>#C4B49C</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#8FD6A4"></div><div class="meta">price-fixed<code>#8FD6A4</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#F0B45C"></div><div class="meta">price-estimated<code>#F0B45C</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#B8AB99"></div><div class="meta">price-metered<code>#B8AB99</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#8FD6A4"></div><div class="meta">verified<code>#8FD6A4</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#3A3226"></div><div class="meta">sponsored-container<code>#3A3226</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#D6C096"></div><div class="meta">sponsored-label<code>#D6C096</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#E8837A"></div><div class="meta">safety (softened)<code>#E8837A</code></div></div>
+      <div class="swatch"><div class="chip" style="background:#3B2F25"></div><div class="meta">border<code>#3B2F25</code></div></div>
     </div>
   </section>
 
@@ -155,7 +165,7 @@
 
   <section aria-labelledby="buttons">
     <h2 id="buttons">3 · Buttons</h2>
-    <p class="sub">Minimum 48px touch target. Visible amber focus ring (keyboard users). Red is reserved for safety actions.</p>
+    <p class="sub">Minimum 48px touch target. Warm amber focus ring (keyboard users). Red is reserved for safety actions.</p>
     <div class="btn-row">
       <button class="btn btn-primary" type="button">Compare taxis</button>
       <button class="btn btn-secondary" type="button">Add return</button>
@@ -235,7 +245,7 @@
   </section>
 
   <footer>
-    TaxiAG design tokens v1 · source: <code>packages/tokens/tokens.json</code> · open <code>design.html</code> in any browser, no build step
+    TaxiAG design tokens v1 · dark warm theme · source: <code>packages/tokens/tokens.json</code> · open <code>design.html</code> in any browser, no build step
   </footer>
 
 </div>
