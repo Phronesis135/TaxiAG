@@ -16,15 +16,18 @@ analytics) and risks.
 |---|----------|----------------|-----|
 | 1 | Client strategy | **React Native (Expo)** for iOS/Android + **Next.js** responsive web app | One language (TypeScript) across clients; Expo covers guest-first mobile quickly; Next.js covers SEO landing pages + desktop booking |
 | 2 | Backend language | **TypeScript — NestJS** (modular monolith first) | Matches client language; modules map cleanly to future microservices; strong validation/scheduling support |
-| 3 | Database | **PostgreSQL + PostGIS** | Relational booking data + geospatial queries (pickup areas, ETAs, nearest-provider logic) |
-| 4 | Cache / realtime backbone | **Redis** (cache, quote-validity windows, rate limits) + **WebSockets** (tracking) via a realtime gateway | Quotes expire; tracking is live; both need low-latency store |
-| 5 | Payments | **Stripe** (Cards, Apple Pay, Google Pay) + **Stripe Connect** for provider payouts/commission split | PRD §16/§30: customer must know *who takes payment*; Connect models direct vs provider-charged flows; PCI scope stays with Stripe |
-| 6 | Maps & places | **Google Maps Platform** (Places Autocomplete, Directions, Geocoding) with **Mapbox** as evaluated alternative | Best UK address coverage; needed for fare estimation and tracking display |
-| 7 | Auth | **Dedicated auth service** (Auth0 or Clerk): Apple, Google, email OTP, phone OTP | PRD §15: guest-first + mainstream sign-in options |
-| 8 | Notifications | **FCM/APNs** (push) + **Twilio** (SMS) + **Postmark/SendGrid** (email receipts) | PRD §19 journey-critical notifications must be reliable and preference-aware |
-| 9 | Infra | **AWS** (or GCP), **Terraform**, **GitHub Actions** CI/CD, containerised API | Reproducible environments; PRD scale phases need infra-as-code from day one |
+| 3 | Database | **PostgreSQL + PostGIS** (local Docker, free) | Same engine as production; relational bookings + geospatial queries (pickup areas, ETAs, nearest-provider logic); £0 until cloud hosting at scale |
+| 4 | Cache / realtime backbone | **Redis** (local Docker, free) + **WebSockets** (in-API gateway, free) | Quote TTLs + live tracking with no paid service; Redis runs alongside Postgres locally |
+| 5 | Payments | **PayPal** (Checkout + sandbox, free for dev) | No monthly fees; sandbox covers direct vs provider-charged flows (PRD §16/§30) now; Apple Pay/Google Pay via PayPal where available; reassess split-payout options at scale |
+| 6 | Maps & places | **OpenStreetMap stack, free** — Leaflet (maps) + Nominatim/Photon (geocode/autocomplete) + OSRM (routing, local Docker) | £0 with strong UK coverage; Google Maps Platform becomes the paid upgrade at scale (better autocomplete/SLAs) |
+| 7 | Auth | **Better Auth** (open-source, self-hosted, free) | Apple/Google social + email OTP + phone OTP plugins cover PRD §15 with no per-user fees; runs inside our API, data stays local |
+| 8 | Notifications | **Expo Push + FCM** (free) for push; **Resend free tier / local Mailpit** for email; SMS deferred (dev fallback: in-app inbox + log) | £0 path for all PRD §19 dev flows; Twilio SMS + paid email volume arrive at scale |
+| 9 | Hosting | **Local dev machine** (Docker Compose: API + Postgres + Redis + OSRM + Mailpit) + **GitHub Actions** CI (free tier) | £0; staging = second Compose profile on the same/another local machine; cloud (AWS/GCP) + Terraform deferred to scale |
 | 10 | Architecture shape | **Modular monolith → extract services** at Phase 2 | MVP speed without painting into a corner; extraction triggers defined in §6 |
+| 11 | Object storage | **Cloudflare R2** (generous free tier, zero egress fees) | Verification docs, vehicle/driver photos, receipts; S3-compatible so code stays portable |
 
+> **Cost constraint (pre-scale):** £0 paid services — everything below runs on the local machine (Docker Compose) or on free tiers/sandbox. Paid upgrades (cloud hosting, Google Maps, Twilio SMS, Stripe/Connect review) are deferred to Phase 2/3 scale.
+>
 > If any decision changes, only §§1–6 need re-review; phase scopes (§§7–9) are stack-agnostic.
 
 ---
@@ -85,10 +88,11 @@ Figma library + coded component library (React Native Paper/Tamagui-based + shar
    │ └──────────┘ └─────────┘ └────────────┘  │
    └────────────┬─────────────────────────────┘
       ┌─────────┼──────────┐
-  PostgreSQL   Redis    Stripe / Maps /
-  + PostGIS   (quotes,  Twilio / FCM /
-   (system    realtime) Auth provider
-   of record)
+  PostgreSQL   Redis    PayPal sandbox / OSM /
+  + PostGIS   (quotes,  FCM + Expo Push /
+   (system    realtime) Better Auth / R2
+   of record,  (all local or free tier)
+   local Docker)
       │
   Provider Adapter Layer ──► Ride-hailing APIs
                              Aggregators (e.g. Autocab/iCabbi-type dispatch systems)
@@ -98,7 +102,7 @@ Figma library + coded component library (React Native Paper/Tamagui-based + shar
 ### 2.2 Core domain flows
 - **Search → compare:** `SearchService` resolves journey + filters → `ProviderMatcher` (service area, hours, vehicle/accessibility capability, availability) → `PricingEngine` produces normalised quotes `{type: fixed|estimated|metered, amount/range, validUntil, fees, cancellationTerms}` → `RankingEngine` sorts cheapest-default; sponsored injected only into labelled slots (§§6, 7, 31).
 - **Price protection:** quotes carry TTL; re-validate before booking; on material change → show new price, require explicit confirm, offer cheaper alternatives (§8).
-- **Booking:** `BookingOrchestrator` branches direct (TaxiAG-controlled: payment via Stripe, TaxiAG support) vs external (handoff with provider context, responsibility banner) — §§booking steps, 40.
+- **Booking:** `BookingOrchestrator` branches direct (TaxiAG-controlled: payment via PayPal sandbox for now, TaxiAG support) vs external (handoff with provider context, responsibility banner) — §§booking steps, 40.
 - **Tracking:** provider webhooks/polling → normalised `TrackingEvent` stream; explicit unavailable state (§18).
 - **Verification:** provider onboarding state machine (applied → … → bookable); expired licence/insurance pauses affected listings (§§20, 22, 29).
 
@@ -116,12 +120,13 @@ Extract `tracking-ingestion`, `notifications`, and `provider-adapters` first whe
 - `journeys` (pickup/dropoff geos, stops, schedule, flight/train refs, requirements)
 - `quotes` (journey, provider, vehicle class, price type, amount/range, validUntil, fees breakdown, source confidence: verified/supplied/reported/estimated/live — §39)
 - `bookings` (journey, quote snapshot, route: direct|external, responsibility model, per-vehicle legs for groups, payment ref, status machine)
-- `payments` / `refunds` (who-charged, Stripe refs, commission split)
+- `payments` / `refunds` (who-charged, PayPal refs, commission split)
 - `reviews` (booking-gated; category scores; verified flag)
 - `reliability_snapshots` (on-time %, cancellation %, avg delay, completed count — only published with sufficient data, §23)
 - `promos` (provider-supplied codes/discounts applied transparently to final price, §26)
 - `sponsored_placements` (slot, label, audit trail proving no organic-rank influence, §31)
 - `notifications_log`, `safety_reports`, event stream for metrics (§41)
+- `media` (Cloudflare R2 object keys: verification documents, vehicle/driver photos, receipt PDFs)
 
 ---
 
@@ -132,7 +137,7 @@ Extract `tracking-ingestion`, `notifications`, and `provider-adapters` first whe
 - `POST /v1/quotes/:id/revalidate` (price-protection check)
 - `POST /v1/bookings` (direct) / `POST /v1/handoffs` (external) — idempotency keys throughout
 - `GET /v1/bookings/:id` + `WS /v1/tracking/:bookingId`
-- `POST /v1/payments/confirm` (Stripe webhooks), `POST /v1/cancellations`, `POST /v1/refunds`
+- `POST /v1/payments/confirm` (PayPal webhooks), `POST /v1/cancellations`, `POST /v1/refunds`
 - `POST /v1/reviews` (verified-gated), provider onboarding endpoints (applicant portal), admin verification endpoints
 - Every price payload includes `{type, displayText, validUntil, fees[], cancellationSummary, responsibility}`.
 
@@ -153,11 +158,11 @@ Each integration implements the `ProviderAdapter` interface (`getQuote`, `create
 ## 6. Phased build plan
 
 ### Phase 0 — Foundations (target: weeks 1–6)
-- [ ] Monorepo setup (`apps/mobile`, `apps/web`, `services/api`, `packages/tokens`, `packages/ui`), CI (lint/type/test/build), Terraform dev+staging envs.
+- [ ] Monorepo setup (`apps/mobile`, `apps/web`, `services/api`, `packages/tokens`, `packages/ui`), CI (lint/type/test/build), Docker Compose local stack (API, Postgres+PostGIS, Redis, OSRM, Mailpit).
 - [ ] Design tokens + first 6 components (§1.3 items 1–3, 5, 8 + EmptyState); accessibility CI gates.
-- [ ] Auth (guest sessions + Apple/Google/email/phone), PostgreSQL+PostGIS schema v1, Redis, Stripe test mode, Maps/places wired.
+- [ ] Better Auth (guest sessions + Apple/Google/email/phone OTP), PostgreSQL+PostGIS schema v1, Redis, PayPal sandbox, OSM stack (Leaflet + Nominatim/Photon + OSRM) wired.
 - [ ] `ProviderAdapter` interface + **2–3 pilot provider integrations** (at least 1 Tier A) in 1–2 UK pilot cities.
-- [ ] Analytics event taxonomy covering PRD §41 metrics; error/observability stack (Sentry, logs, dashboards).
+- [ ] Analytics event taxonomy covering PRD §41 metrics; error/observability stack (Sentry free tier, logs, dashboards).
 - **Exit:** searchable pilot journeys returning real multi-provider quotes in staging; design system v1 published.
 
 ### Phase 1 — MVP (target: months 3–7; PRD §43 scope)
@@ -165,7 +170,7 @@ Workstreams (parallel, each with PRD-mapped acceptance criteria):
 1. **Search & compare** — ride-now + scheduled, passenger count, return/airport/station/multi-stop, max-price + preference filters; cheapest-default ranking with sponsored separation.
 2. **Pricing integrity** — fixed/estimated/metered badges, quote TTL, pre-booking revalidation + material-change confirm + cheaper-alternative search (§§7–9).
 3. **Provider trust** — verification display, reliability stats (data-gated), verified-only reviews, provider profiles (§§20, 23, 24).
-4. **Booking & payment** — guest checkout, book-for-other, direct vs external routes with responsibility banners, Stripe (cards/Wallets; cash marked where provider-supported), receipts (§§15, 16, 40).
+4. **Booking & payment** — guest checkout, book-for-other, direct vs external routes with responsibility banners, PayPal sandbox (cards via PayPal; cash marked where provider-supported), receipts (§§15, 16, 40).
 5. **Tracking & safety MVP** — live tracking where available + explicit unavailable state; driver/vehicle ID; safety reporting (§§18, 38).
 6. **Cancellation/refunds** — pre-booking terms display; unified TaxiAG-controlled flow; provider-rules explainer for external (§17).
 7. **Provider onboarding portal** — application → verification → service-area/pricing/cancellation setup → bookable (§29); admin queue for licence/insurance checks.
@@ -191,7 +196,7 @@ Loyalty points/cashback, generic price-drop alerts, opaque provider scores, hidd
 
 ## 7. Cross-cutting concerns
 
-- **Security & compliance (UK):** UK GDPR (consent, retention, DSAR, data-minimisation — location data is sensitive); PCI via Stripe (never touch PANs); safeguarding flows for safety reports; licensing-data handling with providers; pen-test before MVP launch; dependency/SAST scanning in CI.
+- **Security & compliance (UK):** UK GDPR (consent, retention, DSAR, data-minimisation — location data is sensitive); PCI via PayPal hosted checkout (never touch PANs); safeguarding flows for safety reports; licensing-data handling with providers; pen-test before MVP launch; dependency/SAST scanning in CI.
 - **Testing:** unit (pricing/ranking engines — property-based tests: ranking never influenced by commercial fields), contract tests per `ProviderAdapter`, E2E (Playwright/Detox) for search→book→cancel, accessibility audits, chaos/fallback drills for provider outages (graceful Tier-C degradation).
 - **DevOps:** staging mirrors prod; feature flags; quote/config remotely tunable (TTL windows, material-change threshold); blue-green deploys; backup/PITR for Postgres.
 - **Analytics (PRD §41):** funnels (search → compare → book → complete), price-change frequency/magnitude, reliability aggregates, safety-report rates; weekly product review ritual.
