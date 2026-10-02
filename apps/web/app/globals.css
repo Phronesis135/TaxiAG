@@ -23,6 +23,13 @@ body {
 }
 .page { max-width: 720px; margin: 0 auto; }
 h1 { font-size: 32px; letter-spacing: -0.5px; }
+h2 { font-size: 22px; margin-bottom: 8px; }
+.btn-inline { width: auto; margin-top: 10px; padding: 0 16px; min-height: 44px; font-size: 14px; }
+.checkrow { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; font-size: 14px; }
+.checkrow input { width: 20px; height: 20px; accent-color: var(--focus); }
+.refbox .ref { font-size: 18px; font-weight: 700; overflow-wrap: anywhere; margin-bottom: 8px; }
+.refbox ul { margin-top: 8px; padding-left: 20px; font-size: 14px; }
+.refbox li { margin-bottom: 4px; }
 .tagline { color: var(--muted); margin: 4px 0 24px; }
 .card {
   background: var(--surface); border: 1px solid var(--border);

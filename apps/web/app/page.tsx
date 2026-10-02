@@ -56,6 +56,17 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SearchResult | null>(null);
+  const [bookingFor, setBookingFor] = useState<Quote | null>(null);
+  const [paxName, setPaxName] = useState('');
+  const [paxPhone, setPaxPhone] = useState('');
+  const [forOther, setForOther] = useState(false);
+  const [booking, setBooking] = useState<null | {
+    ref: string;
+    route: string;
+    responsibility: Record<string, string>;
+  }>(null);
+  const [reval, setReval] = useState<Quote | null>(null);
+  const [bookingBusy, setBookingBusy] = useState(false);
 
   async function onSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -93,6 +104,49 @@ export default function Home() {
       setError(err instanceof Error ? err.message : 'Search failed.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function createBooking(quoteId: string) {
+    setBookingBusy(true);
+    setError(null);
+    setBooking(null);
+    setReval(null);
+    try {
+      const res = await fetch(`${API}/v1/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quoteId,
+          passenger: { name: paxName, phone: paxPhone },
+          bookForOther: forOther,
+        }),
+      });
+      const data = (await res.json()) as
+        | { record: { bookingId: string; route: string; responsibility: Record<string, string> } }
+        | { revalidation: Quote }
+        | { message?: string };
+      if (!res.ok) {
+        throw new Error(
+          ('message' in data && typeof data.message === 'string' && data.message) ||
+            `Booking failed (HTTP ${res.status}).`,
+        );
+      }
+      if ('revalidation' in data) {
+        // Price changed while booking — customer must confirm the new price.
+        setReval(data.revalidation);
+        return;
+      }
+      setBooking({
+        ref: data.record.bookingId,
+        route: data.record.route,
+        responsibility: data.record.responsibility,
+      });
+      setBookingFor(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Booking failed.');
+    } finally {
+      setBookingBusy(false);
     }
   }
 
@@ -149,6 +203,18 @@ export default function Home() {
                   <div className="detail">
                     Pickup: {q.pickupEtaMin} min · {q.vehicleClass} · {q.cancellationSummary}
                   </div>
+                  <button
+                    className="btn btn-inline"
+                    type="button"
+                    onClick={() => {
+                      setBookingFor(q);
+                      setBooking(null);
+                      setReval(null);
+                      setError(null);
+                    }}
+                  >
+                    Book this taxi
+                  </button>
                 </div>
                 <div className="price">
                   <div className="amount">
@@ -163,6 +229,67 @@ export default function Home() {
               </div>
             ))
           )}
+        </div>
+      )}
+      {bookingFor && !booking && (
+        <div className="card">
+          <h2>Confirm booking</h2>
+          <p className="meta">
+            {bookingFor.providerName} ·{' '}
+            {priceDisplayText({ priceType: bookingFor.priceType, amount: bookingFor.amount, range: bookingFor.range })}{' '}
+            · {bookingFor.vehicleClass}
+          </p>
+          {reval ? (
+            <div>
+              <div className="error" role="alert">
+                The price changed before booking. New price:{' '}
+                {priceDisplayText({ priceType: reval.priceType, amount: reval.amount, range: reval.range })}.
+                Nothing is booked until you confirm.
+              </div>
+              <button className="btn" type="button" disabled={bookingBusy} onClick={() => createBooking(reval.id)}>
+                {bookingBusy ? 'Booking…' : 'Confirm new price & book'}
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div className="field">
+                <label htmlFor="pname">Passenger name</label>
+                <input id="pname" value={paxName} onChange={(e) => setPaxName(e.target.value)} placeholder="e.g. Jane Doe" />
+              </div>
+              <div className="field">
+                <label htmlFor="pphone">Passenger phone</label>
+                <input id="pphone" type="tel" value={paxPhone} onChange={(e) => setPaxPhone(e.target.value)} placeholder="e.g. +447000000000" />
+              </div>
+              <div className="checkrow">
+                <input id="other" type="checkbox" checked={forOther} onChange={(e) => setForOther(e.target.checked)} />
+                <label htmlFor="other">Booking for someone else</label>
+              </div>
+              <button
+                className="btn"
+                type="button"
+                disabled={bookingBusy || !paxName.trim() || !paxPhone.trim()}
+                onClick={() => createBooking(bookingFor.id)}
+              >
+                {bookingBusy ? 'Booking…' : 'Confirm & book'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {booking && (
+        <div className="card refbox">
+          <h2>Booked ✓</h2>
+          <p className="meta">Reference</p>
+          <p className="ref">{booking.ref}</p>
+          <p className="meta">Route: {booking.route} booking</p>
+          <ul>
+            {Object.entries(booking.responsibility).map(([k, v]) => (
+              <li key={k}>
+                <strong>{k}:</strong> {v}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
