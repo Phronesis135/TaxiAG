@@ -1,0 +1,17 @@
+# Netlify deploys apps/web (the API + DB stay local until the backend host lands).
+# Site slug: taxiag  ->  https://taxiag.netlify.app
+
+[build]
+  command = "npm run build --workspace @taxiag/web"
+  publish = "apps/web/.next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NPM_FLAGS = "--no-audit --no-fund"
+
+# Backend wiring (later): set in Netlify UI -> Site settings -> Environment
+# variables, then redeploy. No code change needed.
+#   NEXT_PUBLIC_API_URL = https://api.yourdomain.com
