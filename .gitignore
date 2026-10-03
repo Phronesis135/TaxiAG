@@ -12,6 +12,9 @@ build/
 .env.local
 .env.*.local
 
+# Netlify local link state
+.netlify/
+
 # Logs / OS
 *.log
 .DS_Store

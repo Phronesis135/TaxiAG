@@ -3,7 +3,7 @@
 
 [build]
   command = "npm run build --workspace @taxiag/web"
-  publish = "apps/web/.next"
+  publish = "apps/web/out"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
