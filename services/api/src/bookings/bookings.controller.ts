@@ -12,9 +12,11 @@ import { ProvidersService } from '../providers/providers.service';
 
 interface CreateBookingBody {
   quoteId?: unknown;
-  passenger?: { name?: unknown; phone?: unknown };
+  passenger?: { name?: unknown; phone?: unknown; email?: unknown };
   bookForOther?: unknown;
 }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 @Controller('v1')
 export class BookingsController {
@@ -44,10 +46,18 @@ export class BookingsController {
     if (typeof phone !== 'string' || !phone.trim()) {
       throw new BadRequestException('passenger.phone is required');
     }
+    const email = body.passenger?.email;
+    if (email !== undefined && (typeof email !== 'string' || !EMAIL_RE.test(email))) {
+      throw new BadRequestException('passenger.email must be a valid email address');
+    }
     try {
       const out = await this.bookings.create(
         body.quoteId,
-        { name: name.trim(), phone: phone.trim() },
+        {
+          name: name.trim(),
+          phone: phone.trim(),
+          ...(email ? { email } : {}),
+        },
         body.bookForOther === true,
       );
       if ('revalidation' in out) {

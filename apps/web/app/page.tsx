@@ -59,6 +59,7 @@ export default function Home() {
   const [bookingFor, setBookingFor] = useState<Quote | null>(null);
   const [paxName, setPaxName] = useState('');
   const [paxPhone, setPaxPhone] = useState('');
+  const [paxEmail, setPaxEmail] = useState('');
   const [forOther, setForOther] = useState(false);
   const [booking, setBooking] = useState<null | {
     ref: string;
@@ -118,7 +119,11 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           quoteId,
-          passenger: { name: paxName, phone: paxPhone },
+          passenger: {
+            name: paxName,
+            phone: paxPhone,
+            ...(paxEmail.trim() ? { email: paxEmail.trim() } : {}),
+          },
           bookForOther: forOther,
         }),
       });
@@ -127,16 +132,18 @@ export default function Home() {
         | { revalidation: Quote }
         | { message?: string };
       if (!res.ok) {
-        throw new Error(
-          ('message' in data && typeof data.message === 'string' && data.message) ||
-            `Booking failed (HTTP ${res.status}).`,
-        );
+        const msg =
+          'message' in data && typeof data.message === 'string' && data.message
+            ? data.message
+            : null;
+        throw new Error(msg ?? `Booking failed (HTTP ${res.status}).`);
       }
       if ('revalidation' in data) {
         // Price changed while booking — customer must confirm the new price.
         setReval(data.revalidation);
         return;
       }
+      if (!('record' in data)) throw new Error('Unexpected booking response.');
       setBooking({
         ref: data.record.bookingId,
         route: data.record.route,
@@ -260,6 +267,10 @@ export default function Home() {
                 <label htmlFor="pphone">Passenger phone</label>
                 <input id="pphone" type="tel" value={paxPhone} onChange={(e) => setPaxPhone(e.target.value)} placeholder="e.g. +447000000000" />
               </div>
+              <div className="field">
+                <label htmlFor="pemail">Email for payment receipt (optional)</label>
+                <input id="pemail" type="email" value={paxEmail} onChange={(e) => setPaxEmail(e.target.value)} placeholder="you@example.com" />
+              </div>
               <div className="checkrow">
                 <input id="other" type="checkbox" checked={forOther} onChange={(e) => setForOther(e.target.checked)} />
                 <label htmlFor="other">Booking for someone else</label>
@@ -283,6 +294,35 @@ export default function Home() {
           <p className="meta">Reference</p>
           <p className="ref">{booking.ref}</p>
           <p className="meta">Route: {booking.route} booking</p>
+          <button
+            className="btn"
+            type="button"
+            disabled={bookingBusy}
+            onClick={async () => {
+              setBookingBusy(true);
+              setError(null);
+              try {
+                const res = await fetch(`${API}/v1/payments/order`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ bookingId: booking.ref }),
+                });
+                const data = (await res.json()) as { approveUrl?: string; message?: string };
+                if (!res.ok || !data.approveUrl) {
+                  throw new Error(
+                    (typeof data.message === 'string' && data.message) ||
+                      'PayPal sandbox not configured — add keys to .env and restart the API.',
+                  );
+                }
+                window.location.href = data.approveUrl;
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'Payment failed.');
+                setBookingBusy(false);
+              }
+            }}
+          >
+            {bookingBusy ? 'Contacting PayPal…' : 'Pay with PayPal (sandbox)'}
+          </button>
           <ul>
             {Object.entries(booking.responsibility).map(([k, v]) => (
               <li key={k}>

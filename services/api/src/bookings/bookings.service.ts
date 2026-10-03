@@ -9,6 +9,15 @@ import type { BookingResult } from '../providers/provider-adapter.interface';
 export interface Passenger {
   name: string;
   phone: string;
+  /** Optional — payment receipts are emailed here when present. */
+  email?: string;
+}
+
+export interface BookingPayment {
+  orderId: string;
+  captureId: string;
+  amountGbp: number;
+  paidAt: string;
 }
 
 export interface BookingRecord extends BookingResult {
@@ -18,6 +27,7 @@ export interface BookingRecord extends BookingResult {
   bookForOther: boolean;
   createdAt: string;
   cancelledAt?: string;
+  payment?: BookingPayment;
 }
 
 @Injectable()
@@ -59,6 +69,16 @@ export class BookingsService {
 
   get(bookingId: string): BookingRecord | undefined {
     return this.records.get(bookingId);
+  }
+
+  markPaid(
+    bookingId: string,
+    payment: { orderId: string; captureId: string; amountGbp: number },
+  ): BookingRecord | undefined {
+    const record = this.records.get(bookingId);
+    if (!record || record.cancelledAt || record.payment) return record;
+    record.payment = { ...payment, paidAt: new Date().toISOString() };
+    return record;
   }
 
   async cancel(bookingId: string): Promise<BookingRecord | undefined> {

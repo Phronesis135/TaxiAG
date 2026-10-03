@@ -1272,7 +1272,7 @@ Recorded here so the PRD remains the single canonical product record. Nothing ab
 * Storage: Cloudflare R2 (S3-compatible)
 * Payments: PayPal Checkout + sandbox (split-payout options reassessed at scale)
 * Maps: OpenStreetMap stack — Leaflet + Nominatim/Photon + OSRM (Google Maps deferred to scale)
-* Notifications: **Twilio** (SMS) + **Postmark** (email) + Expo Push/FCM (push) — trial credits in dev, pay-as-you-go in production
+* Notifications: **Twilio** (SMS) + **Resend** (email receipts) + Expo Push/FCM (push) — trial credits in dev, pay-as-you-go in production
 * Hosting: local dev machine; cloud + Terraform deferred to scale
 
 ## **Design theme**
