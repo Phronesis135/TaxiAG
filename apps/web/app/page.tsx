@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { priceDisplayText } from '@taxiag/ui';
+import { mockBook, mockSearch, type MockQuote, priceDisplayText } from '@taxiag/ui';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -68,6 +68,7 @@ export default function Home() {
   }>(null);
   const [reval, setReval] = useState<Quote | null>(null);
   const [bookingBusy, setBookingBusy] = useState(false);
+  const [demo, setDemo] = useState(false);
 
   async function onSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -87,6 +88,7 @@ export default function Home() {
       };
       const max = parseFloat(maxPrice);
       if (!Number.isNaN(max) && max > 0) body.maxPrice = max;
+      const iso = body.when as string;
       let res: Response;
       try {
         res = await fetch(`${API}/v1/search`, {
@@ -95,10 +97,22 @@ export default function Home() {
           body: JSON.stringify(body),
         });
       } catch {
-        throw new Error(
-          'API not reachable at localhost:3001 — start it with: npm run stack:up, then run the API (see README).',
-        );
+        // API unreachable (e.g. static hosting with no backend yet):
+        // fall back to the in-browser demo provider. Real flow resumes
+        // automatically whenever the API is reachable.
+        const m = mockSearch({
+          pickup: body.pickup as { lat: number; lng: number },
+          dropoff: body.dropoff as { lat: number; lng: number },
+          when: iso,
+          passengers: body.passengers as number,
+          ...(typeof body.maxPrice === 'number' ? { maxPrice: body.maxPrice } : {}),
+        });
+        setResult({ quotes: m.quotes, count: m.count, generatedAt: m.generatedAt });
+        setDemo(true);
+        setLoading(false);
+        return;
       }
+      setDemo(false);
       if (!res.ok) throw new Error(`Search failed (HTTP ${res.status}).`);
       setResult((await res.json()) as SearchResult);
     } catch (err) {
@@ -113,6 +127,39 @@ export default function Home() {
     setError(null);
     setBooking(null);
     setReval(null);
+    if (demo) {
+      // No backend: complete the loop locally as an explicit demo booking.
+      const q = result?.quotes.find((x) => x.id === quoteId);
+      if (!q) {
+        setError('Quote no longer available — please search again.');
+        setBookingBusy(false);
+        return;
+      }
+      const d = mockBook(
+        {
+          ...q,
+          currency: 'GBP' as const,
+          fees: [] as Array<{ label: string; amount: number }>,
+          vehicleClass: q.vehicleClass as MockQuote['vehicleClass'],
+          validUntil: new Date(Date.now() + 5 * 60_000).toISOString(),
+        },
+        paxName.trim() || 'Demo Rider',
+      );
+      setBooking({
+        ref: d.ref,
+        route: 'demo',
+        responsibility: {
+          booking: `${d.providerName} — DEMO, no real booking was made`,
+          payment: 'DEMO — no payment taken. Run the API + PayPal sandbox for real payments.',
+          cancellation: q.cancellationSummary,
+          refund: 'DEMO — nothing to refund.',
+          support: 'Run the API locally for the full experience (see README).',
+        },
+      });
+      setBookingFor(null);
+      setBookingBusy(false);
+      return;
+    }
     try {
       const res = await fetch(`${API}/v1/bookings`, {
         method: 'POST',
@@ -197,7 +244,14 @@ export default function Home() {
         <div>
           <p className="meta">
             {result.count} option{result.count === 1 ? '' : 's'} · cheapest first · {new Date(result.generatedAt).toLocaleTimeString('en-GB')}
+            {demo ? ' · demo sample' : ''}
           </p>
+          {demo && (
+            <div className="demobanner" role="status">
+              Demo mode — the API isn’t reachable, so these are sample quotes computed in your browser.
+              Run the API locally for live bookings and PayPal sandbox payments.
+            </div>
+          )}
           {result.count === 0 ? (
             <div className="empty">
               No suitable vehicles found{maxPrice ? ` under £${maxPrice}` : ''}. Try a higher budget or different route.
@@ -294,6 +348,9 @@ export default function Home() {
           <p className="meta">Reference</p>
           <p className="ref">{booking.ref}</p>
           <p className="meta">Route: {booking.route} booking</p>
+          {booking.route === 'demo' ? (
+            <p className="meta">Demo booking — no payment step. Connect the API for PayPal sandbox checkout.</p>
+          ) : (
           <button
             className="btn"
             type="button"
@@ -323,6 +380,7 @@ export default function Home() {
           >
             {bookingBusy ? 'Contacting PayPal…' : 'Pay with PayPal (sandbox)'}
           </button>
+          )}
           <ul>
             {Object.entries(booking.responsibility).map(([k, v]) => (
               <li key={k}>
