@@ -90,7 +90,9 @@ export class PayPalService {
       },
       prefer: 'return=representation',
     });
-    const order = body as unknown as {
+    // Note: this SDK version returns body as a JSON string, not an object.
+    const raw = typeof body === 'string' ? JSON.parse(body) : body;
+    const order = raw as {
       id?: string;
       links?: Array<{ rel?: string; href?: string }>;
     };
@@ -113,7 +115,8 @@ export class PayPalService {
       id: orderId,
       prefer: 'return=representation',
     });
-    const order = body as unknown as {
+    const raw = typeof body === 'string' ? JSON.parse(body) : body;
+    const order = raw as {
       status?: string;
       purchaseUnits?: Array<{
         payments?: { captures?: Array<{ id?: string; amount?: { value?: string } }> };
