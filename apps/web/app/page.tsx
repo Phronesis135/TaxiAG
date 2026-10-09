@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { mockBook, mockSearch, type MockQuote, priceDisplayText } from '@taxiag/ui';
+import InstallButton from './install-button';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -208,6 +209,9 @@ export default function Home() {
     <div className="page">
       <h1>TaxiAG</h1>
       <p className="tagline">Compare. Choose. Book. — local MVP wired to the live API</p>
+      <div style={{ marginBottom: 16 }}>
+        <InstallButton />
+      </div>
 
       <form className="card" onSubmit={onSearch}>
         <div className="field">

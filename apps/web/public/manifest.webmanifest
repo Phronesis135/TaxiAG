@@ -1,0 +1,34 @@
+{
+  "id": "/",
+  "name": "TaxiAG — Compare. Choose. Book.",
+  "short_name": "TaxiAG",
+  "description": "UK taxi comparison and booking.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1c1611",
+  "theme_color": "#1c1611",
+  "lang": "en-GB",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
