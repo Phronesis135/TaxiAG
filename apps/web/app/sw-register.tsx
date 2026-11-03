@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from ';
+import { useEffect } from 'react';
 
 // Registers the service worker once (safe if unsupported).
 export default function SwRegister() {
