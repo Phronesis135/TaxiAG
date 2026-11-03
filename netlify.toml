@@ -11,6 +11,7 @@
 [build.environment]
   NODE_VERSION = "22"
   NPM_FLAGS = "--no-audit --no-fund"
+  NODE_OPTIONS = "--max-old-space-size=2048"
 
 # Backend wiring (later): set in Netlify UI -> Site settings -> Environment
 # variables, then redeploy. No code change needed.
